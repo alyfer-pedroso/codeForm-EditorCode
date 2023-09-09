@@ -1,38 +1,95 @@
 <!DOCTYPE html>
 <html lang="pt-br">
     <head>
-        <title>codeForm Code</title>
+        <title>codeForm Editor</title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="index.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" />
-        <link rel="stylesheet" href="https://codemirror.net/theme/monokai.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js"></script>
-        <link rel="stylesheet" href="https://codemirror.net/5/theme/material.css" />
+
+        <script src="codemirror-5.65.15/lib/codemirror.js"></script>
+        <link rel="stylesheet" href="codemirror-5.65.15/lib/codemirror.css" />
+        <link rel="stylesheet" href="codemirror-5.65.15/theme/material-ocean.css" />
+        <script src="codemirror-5.65.15/mode/javascript/javascript.js"></script>
+        <script src="codemirror-5.65.15/mode/css/css.js"></script>
+        <script src="codemirror-5.65.15/mode/htmlmixed/htmlmixed.js"></script>
+        <script src="codemirror-5.65.15/mode/xml/xml.js"></script>
+        <script src="codemirror-5.65.15/mode/python/python.js"></script>
+
+        <script src="codemirror-5.65.15/addon/hint/show-hint.js"></script>
+        <link rel="stylesheet" href="codemirror-5.65.15/addon/hint/show-hint.css" />
+        <script src="codemirror-5.65.15/addon/hint/css-hint.js"></script>
+        <script src="codemirror-5.65.15/addon/hint/javascript-hint.js"></script>
+        <script src="codemirror-5.65.15/addon/hint/html-hint.js"></script>
+        <script src="codemirror-5.65.15/addon/hint/css-hint.js"></script>
+        <script src="codemirror-5.65.15/addon/hint/xml-hint.js"></script>
+        <script src="codemirror-5.65.15/addon/hint/sql-hint.js"></script>
+        <script src="codemirror-5.65.15/addon/edit/closetag.js"></script>
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
     </head>
 
     <body>
-        <h1>codeForm <img src="imgs/codeForm-logo.jpg" /></h1>
+        <header>
+            <h1>codeForm</h1>
+            <img src="imgs/codeForm-logo.jpg" />
+        </header>
 
-        <textarea id="editor">
-          function myScript(){
-            return 200;
-          }
-        </textarea>
+        <div>
+            <textarea id="editor"></textarea>
+        </div>
+
+        <div id="hint">
+            <p><b>DICA:</b> Aperte "Ctrl-Space" para usar o auto complete!</p>
+        </div>
 
         <footer>
-            <button id="btnSalvar" onclick="salvarArquivo()">Salvar Arquivo</button>
+            <button id="btnSalvar" onclick="saveAs()">Save As</button>
         </footer>
 
         <script>
             const $myCodeMirror = CodeMirror.fromTextArea(document.querySelector("#editor"), {
+                mode: {
+                    name: "htmlmixed",
+                    globalVars: true,
+                },
                 lineNumbers: true,
-                theme: "material",
-                mode: "javascript",
+                theme: "material-ocean",
+                autoCloseTags: true,
+                extraKeys: { "Ctrl-Space": "autocomplete" },
+            });
+            $myCodeMirror.setSize("98%", "70vh");
+            $myCodeMirror.setValue(`<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+            `);
+
+            const { ipcRenderer } = require("electron");
+
+            function saveAs() {
+                const fileContent = $myCodeMirror.getValue();
+                ipcRenderer.send("renderer/save_file", fileContent);
+            }
+
+            addEventListener("keydown", (e) => {
+                if (e.ctrlKey && e.key === "s") {
+                    saveAs();
+                }
+            });
+
+            ipcRenderer.on("main/save_file", function (e, msgMain) {
+                console.log("Resposta da main:", msgMain);
             });
         </script>
     </body>
